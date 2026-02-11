@@ -115,6 +115,51 @@ FROM Sales.Customer
 ORDER BY
   CASE WHEN CustomerRegion IS NULL THEN 1 ELSE 0 END, CustomerRegion;
 
+/* Proposition 1: 
+        Suppose I was interested in finding which region ordered the most from
+        my company. This query will return a sorted list of regions that have the most 
+        to the least orders.
+*/
+SELECT ShipToRegion,
+        Count(OrderId) AS OrderCount
+FROM Sales.[Order] 
+GROUP BY ShipToRegion
+ORDER BY
+        CASE WHEN ShipToRegion IS NULL THEN 1 ELSE 0 END,
+        OrderCount DESC;
+
+/* Proposition 2:
+        Suppose I wante to find out who the longest tenured employees are in each region.
+        This query will return a table showing employees with their seniority ranks in terms
+        of longest to shortest in order, grouped by region.
+*/
+SELECT 
+        EmployeeFirstName + ' ' + EmployeeLastName AS EmployeeName,
+        EmployeeRegion,
+        HireDate,
+        ROW_NUMBER()OVER( 
+                PARTITION BY EmployeeRegion
+                ORDER BY HireDate
+        ) AS SeniorityRank
+FROM HumanResources.Employee 
+WHERE EmployeeRegion IS NOT NULL
+ORDER BY EmployeeRegion, SeniorityRank;
+
+/* Proposition 3:
+        I want to view a page where employees are listed in alphabetical order,
+        grouped by their country. This query will return a table with 10 employees per
+        page grouped by country, in alphabetical order.
+*/
+SELECT 
+        EmployeeCountry,
+        EmployeeLastName + ', ' + EmployeeFirstName AS EmployeeName,
+        EmployeeTitle
+FROM HumanResources.Employee
+ORDER BY 
+        EmployeeCountry COLLATE Latin1_General_CI_AS,
+        EmployeeLastName COLLATE Latin1_General_CI_AS
+OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY;
+
 
 /*  FOOTNOTES
 
